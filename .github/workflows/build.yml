@@ -1,9 +1,6 @@
 name: Java CI with Maven
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -20,7 +17,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '21'
-          distribution: 'adopt'
+          distribution: 'temurin'
 
       - name: Build with Maven
         run: mvn clean package
@@ -28,8 +25,11 @@ jobs:
       - name: Package build into ZIP
         run: zip -r my_app.zip target/
 
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload to Release
+        uses: ncipollo/release-action@v1
         with:
-          name: java-app
-          path: my_app.zip
+          artifacts: my_app.zip
+          tag: ${{ github.sha }}
+          name: Release ${{ github.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
