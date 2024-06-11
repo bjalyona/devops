@@ -33,4 +33,4 @@ jobs:
             --data-binary "@my_app.zip" \
             "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.sha }}/assets?name=my_app.zip"
         env:
-          GITHUB_TOKEN: ${{ secrets.YOUR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
