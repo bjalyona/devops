@@ -26,10 +26,11 @@ jobs:
         run: zip -r my_app.zip target/
 
       - name: Upload to Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: my_app.zip
-          tag: ${{ github.sha }}
-          name: Release ${{ github.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
+            -H "Content-Type: application/zip" \
+            --data-binary "@my_app.zip" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.sha }}/assets?name=my_app.zip"
+        env:
+          GITHUB_TOKEN: ${{ secrets.YOUR_TOKEN }}
