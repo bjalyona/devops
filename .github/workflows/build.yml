@@ -19,7 +19,7 @@ jobs:
           java-version: '21'
 
       - name: Build with Maven
-        run: mvn clean package
+        run: mvn -B package --file pom.xml
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -29,4 +29,4 @@ jobs:
           upload_url: ${{ github.event.repository.releases_url }}
           asset_path: target/*.jar
           asset_name: app.jar
-          asset_content_type: application/java-archive
+          
