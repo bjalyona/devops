@@ -19,20 +19,20 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: List target directory
-        run: ls -la target
+      - name: Create ZIP package
+        run: zip -j target/bin.zip target/*.jar
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: app-jar
-          path: target/*.jar
-
+          name: app-package
+          path: target/bin.zip
 
   release:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'pull_request'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -40,7 +40,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v2
         with:
-          name: app-jar
+          name: app-package
           path: .
 
       - name: Create GitHub Release
@@ -53,13 +53,13 @@ jobs:
           release_name: "Release v1.0.${{ github.run_number }}"
           draft: false
           prerelease: true
-  
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./*.jar
-          asset_name: app.jar
-          asset_content_type: application/java-archive
+          asset_path: ./bin.zip
+          asset_name: bin.zip
+          asset_content_type: application/zip
