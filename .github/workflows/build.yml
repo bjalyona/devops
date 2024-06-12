@@ -2,35 +2,65 @@ name: Java CI with Maven
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v2
         with:
           java-version: '21'
-          distribution: 'temurin'
 
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Package build into ZIP
-        run: zip -r my_app.zip target/
+      - name: Create ZIP package
+        run: zip -j target/app.zip target/*.jar
 
-      - name: Upload to Release
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
-            -H "Content-Type: application/zip" \
-            --data-binary "@my_app.zip" \
-            "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.sha }}/assets?name=my_app.zip"
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-package
+          path: target/app.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: app-package
+          path: .
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v1.0.${{ github.run_number }}"
+          release_name: "Release v1.0.${{ github.run_number }}"
+          draft: false
+          prerelease: true
+          generate_release_notes: true
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./app.zip
+          asset_name: app.zip
+          asset_content_type: application/zip
